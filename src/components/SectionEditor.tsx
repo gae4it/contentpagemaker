@@ -123,7 +123,9 @@ export function SectionEditor({
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id as "basic" | "buttons" | "images")}
+                onClick={() =>
+                  setActiveTab(tab.id as "basic" | "buttons" | "images")
+                }
                 className={`border-b-2 px-1 py-2 text-sm font-medium ${
                   activeTab === tab.id
                     ? "border-blue-500 text-blue-600"

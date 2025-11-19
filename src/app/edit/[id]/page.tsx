@@ -247,7 +247,8 @@ export default function EditLandingPage({ params }: EditLandingPageProps) {
 
           {landingPage.sections.length === 0 ? (
             <div className="py-8 text-center text-gray-500">
-              No sections added yet. Click &quot;Add Section&quot; to get started.
+              No sections added yet. Click &quot;Add Section&quot; to get
+              started.
             </div>
           ) : (
             <div className="space-y-4">
@@ -261,11 +262,19 @@ export default function EditLandingPage({ params }: EditLandingPageProps) {
                     title: section.title ?? undefined,
                     subtitle: section.subtitle ?? undefined,
                     description: section.description ?? undefined,
-                    buttons: (Array.isArray(section.buttons) ? section.buttons : []).map((btn) => ({
+                    buttons: (Array.isArray(section.buttons)
+                      ? section.buttons
+                      : []
+                    ).map((btn) => ({
                       ...btn,
-                      linkType: (btn as { linkType?: string }).linkType as "url" | "scroll",
+                      linkType: (btn as { linkType?: string }).linkType as
+                        | "url"
+                        | "scroll",
                     })),
-                    images: (Array.isArray(section.images) ? section.images : []).map((img) => ({
+                    images: (Array.isArray(section.images)
+                      ? section.images
+                      : []
+                    ).map((img) => ({
                       ...img,
                       alt: (img as { alt?: string }).alt ?? undefined,
                     })),
