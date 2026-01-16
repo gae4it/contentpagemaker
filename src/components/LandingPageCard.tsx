@@ -15,6 +15,7 @@ interface LandingPageCardProps {
   onDelete: () => void;
   onArchive: () => void;
   onDuplicate: () => void;
+  isArchived?: boolean;
 }
 
 export function LandingPageCard({
@@ -22,6 +23,7 @@ export function LandingPageCard({
   onDelete,
   onArchive,
   onDuplicate,
+  isArchived = false,
 }: LandingPageCardProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -86,7 +88,7 @@ export function LandingPageCard({
             onClick={onArchive}
             className="w-full"
           >
-            Archive
+            {isArchived ? "Restore" : "Archive"}
           </Button>
           <Button
             variant="warning"

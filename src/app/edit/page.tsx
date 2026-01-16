@@ -181,6 +181,7 @@ export default function EditLandingPages() {
                     onDuplicate={() =>
                       duplicateLandingPage.mutate({ id: page.id })
                     }
+                    isArchived={true}
                   />
                 ))}
               </div>
