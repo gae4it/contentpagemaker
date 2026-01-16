@@ -1,6 +1,7 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 
@@ -17,9 +18,16 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
+      isGuest?: boolean;
     } & DefaultSession["user"];
   }
+
+  interface User {
+    isGuest?: boolean;
+  }
 }
+
+const GUEST_USER_ID = "guest-user-shared-account";
 
 /**
  * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
@@ -28,6 +36,21 @@ declare module "next-auth" {
  */
 export const authConfig = {
   providers: [
+    Credentials({
+      id: "guest",
+      name: "Guest",
+      credentials: {},
+      async authorize() {
+        // Guest user is created via database migration
+        // Return the guest user object
+        return {
+          id: GUEST_USER_ID,
+          email: "guest@contentpagemaker.local",
+          name: "Guest User",
+          isGuest: true,
+        };
+      },
+    }),
     ...(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
       ? [
           GitHub({
@@ -47,13 +70,32 @@ export const authConfig = {
   ],
   adapter: PrismaAdapter(db),
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.isGuest = user.isGuest ?? false;
+      }
+      return token;
+    },
+    session: ({ session, token, user }) => {
+      const isGuest = (token?.isGuest as boolean | undefined) ?? false;
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: isGuest
+            ? (token.id as string)
+            : (user?.id ?? (token.id as string)),
+          isGuest: isGuest,
+        },
+      } as typeof session;
+    },
+  },
+  pages: {
+    signIn: "/auth/signin",
+  },
+  session: {
+    strategy: "jwt" as const,
   },
 } satisfies NextAuthConfig;
 

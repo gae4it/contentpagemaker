@@ -1,11 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
-import {
-  createTRPCRouter,
-  publicProcedure,
-  protectedProcedure,
-} from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 
 const MAX_LANDING_PAGES = 250;
 const MAX_SECTIONS_PER_PAGE = 25;

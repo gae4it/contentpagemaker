@@ -4,6 +4,10 @@ import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/Button";
 
 export default function SignInPage() {
+  const handleGuestSignIn = async () => {
+    await signIn("guest", { callbackUrl: "/" });
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-lg">
@@ -15,6 +19,38 @@ export default function SignInPage() {
         </div>
 
         <div className="mt-8 space-y-4">
+          <Button
+            onClick={handleGuestSignIn}
+            variant="primary"
+            className="w-full"
+          >
+            <svg
+              className="mr-2 h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+            Continue as Guest
+          </Button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-2 text-gray-500">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
           <Button
             onClick={() => signIn("github", { callbackUrl: "/" })}
             variant="outline"
@@ -55,6 +91,10 @@ export default function SignInPage() {
             </svg>
             Continue with Google
           </Button>
+
+          <p className="mt-4 text-center text-xs text-gray-500">
+            Guest account is shared. All users can view and edit guest content.
+          </p>
         </div>
       </div>
     </div>
