@@ -22,8 +22,8 @@ export default function TermsPage() {
             <p className="text-blue-800">
               <strong>📚 Educational Project Notice:</strong> This is a
               non-commercial open source project for educational purposes only.
-              Use of this service is provided "as-is" for study and learning.
-              Hosted in the United States. No warranties or commercial
+              Use of this service is provided on an as-is basis for study and
+              learning. Hosted in the United States. No warranties or commercial
               guarantees are provided.
             </p>
           </div>
@@ -34,7 +34,7 @@ export default function TermsPage() {
                 1. Acceptance of Terms
               </h2>
               <p>
-                By accessing and using ContentPageMaker ("the Service"), you
+                By accessing and using ContentPageMaker (the Service), you
                 acknowledge that this is a non-commercial study tool provided
                 for educational and learning purposes only. If you do not agree
                 to these terms, please do not use this service.
@@ -135,8 +135,8 @@ export default function TermsPage() {
                     project, not a production-ready service
                   </li>
                   <li>
-                    <strong>No Warranty:</strong> The service is provided "AS
-                    IS" without any warranties
+                    <strong>No Warranty:</strong> The service is provided AS IS
+                    without any warranties
                   </li>
                   <li>
                     <strong>No Guarantee:</strong> We do not guarantee uptime,

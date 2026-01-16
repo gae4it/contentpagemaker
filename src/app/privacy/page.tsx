@@ -302,7 +302,7 @@ export default function PrivacyPolicyPage() {
 
             <section>
               <h2 className="mb-3 text-xl font-semibold text-gray-900">
-                12. Children's Privacy
+                12. Children and Minors Privacy
               </h2>
               <p>
                 This educational service is intended for users of all ages for

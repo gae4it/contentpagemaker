@@ -81,8 +81,8 @@ export default function LegalNoticePage() {
               </p>
               <p className="mt-2">
                 <strong>No Warranty / Own Risk:</strong> The service is provided
-                "as is" without any warranties or guarantees. Use is at your
-                sole responsibility and risk.
+                on an as-is basis without any warranties or guarantees. Use is
+                at your sole responsibility and risk.
               </p>
             </section>
 
