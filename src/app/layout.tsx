@@ -12,7 +12,30 @@ import { Footer } from "@/components/Footer";
 export const metadata: Metadata = {
   title: "ContentPageMaker",
   description: "Create and manage landing page content with ease",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  icons: [
+    { rel: "icon", url: "/favicon.ico" },
+    {
+      rel: "icon",
+      type: "image/png",
+      sizes: "16x16",
+      url: "/images/icons/favicon-16x16.png",
+    },
+    {
+      rel: "icon",
+      type: "image/png",
+      sizes: "32x32",
+      url: "/images/icons/favicon-32x32.png",
+    },
+  ],
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "ContentPageMaker",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   robots: {
     index: false,
     follow: false,

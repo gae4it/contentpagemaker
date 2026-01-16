@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="#3B82F6"/>
+  
+  <!-- Page/Document icon -->
+  <rect x="160" y="120" width="192" height="240" rx="16" fill="white"/>
+  
+  <!-- Lines on page -->
+  <rect x="180" y="160" width="152" height="8" rx="4" fill="#3B82F6"/>
+  <rect x="180" y="190" width="152" height="8" rx="4" fill="#3B82F6"/>
+  <rect x="180" y="220" width="100" height="8" rx="4" fill="#3B82F6"/>
+  
+  <!-- Content boxes -->
+  <rect x="180" y="260" width="152" height="12" rx="6" fill="#E5E7EB"/>
+  <rect x="180" y="285" width="130" height="12" rx="6" fill="#E5E7EB"/>
+  <rect x="180" y="310" width="152" height="12" rx="6" fill="#E5E7EB"/>
+  
+  <!-- Cursor/Edit icon -->
+  <circle cx="360" cy="380" r="45" fill="#10B981"/>
+  <path d="M345 365 L365 350 L375 375 Z" fill="white"/>
+</svg>
