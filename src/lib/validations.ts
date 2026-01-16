@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 // Limits
-export const MAX_LANDING_PAGES = 250;
 export const MAX_SECTIONS_PER_PAGE = 25;
 export const MAX_BUTTONS_PER_SECTION = 3;
 export const MAX_IMAGES_PER_SECTION = 8;

@@ -66,12 +66,14 @@ model LandingPage {
   id          String   @id @default(cuid())
   url         String
   description String
+  archived    Boolean  @default(false)
   userId      String?
   user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   sections    Section[]
   
+  @@unique([userId, url])
   @@map("landing_pages")
 }
 

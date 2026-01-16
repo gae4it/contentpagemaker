@@ -3,26 +3,30 @@ import { TRPCError } from "@trpc/server";
 
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 
-const MAX_LANDING_PAGES = 250;
 const MAX_SECTIONS_PER_PAGE = 25;
 
 export const landingPageRouter = createTRPCRouter({
   // Get all landing pages for current user
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    return ctx.db.landingPage.findMany({
-      where: { userId: ctx.session.user.id },
-      orderBy: { updatedAt: "desc" },
-      include: {
-        sections: {
-          orderBy: { order: "asc" },
-          include: {
-            buttons: true,
-            images: true,
+  getAll: protectedProcedure
+    .input(z.object({ archived: z.boolean().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      return ctx.db.landingPage.findMany({
+        where: {
+          userId: ctx.session.user.id,
+          archived: input?.archived ?? false,
+        },
+        orderBy: { updatedAt: "desc" },
+        include: {
+          sections: {
+            orderBy: { order: "asc" },
+            include: {
+              buttons: true,
+              images: true,
+            },
           },
         },
-      },
-    });
-  }),
+      });
+    }),
 
   // Get single landing page by ID
   getById: protectedProcedure
@@ -97,14 +101,18 @@ export const landingPageRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Check landing page limit for this user
-      const count = await ctx.db.landingPage.count({
-        where: { userId: ctx.session.user.id },
+      // Check if URL already exists for this user
+      const existingPage = await ctx.db.landingPage.findFirst({
+        where: {
+          userId: ctx.session.user.id,
+          url: input.url,
+        },
       });
-      if (count >= MAX_LANDING_PAGES) {
+
+      if (existingPage) {
         throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: `Maximum ${MAX_LANDING_PAGES} landing pages allowed`,
+          code: "CONFLICT",
+          message: "A landing page with this URL already exists",
         });
       }
 
@@ -148,6 +156,123 @@ export const landingPageRouter = createTRPCRouter({
       });
     }),
 
+  // Duplicate landing page
+  duplicate: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const original = await ctx.db.landingPage.findUnique({
+        where: {
+          id: input.id,
+          userId: ctx.session.user.id,
+        },
+        include: {
+          sections: {
+            orderBy: { order: "asc" },
+            include: {
+              buttons: true,
+              images: true,
+            },
+          },
+        },
+      });
+
+      if (!original) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Landing page not found",
+        });
+      }
+
+      // Find next available URL suffix (-2, -3, etc.)
+      let suffix = 2;
+      let newUrl = `${original.url}-${suffix}`;
+
+      while (true) {
+        const existing = await ctx.db.landingPage.findFirst({
+          where: {
+            userId: ctx.session.user.id,
+            url: newUrl,
+          },
+        });
+
+        if (!existing) break;
+        suffix++;
+        newUrl = `${original.url}-${suffix}`;
+      }
+
+      // Create duplicate with new URL
+      return ctx.db.landingPage.create({
+        data: {
+          url: newUrl,
+          description: original.description,
+          userId: ctx.session.user.id,
+          archived: original.archived,
+          sections: {
+            create: original.sections.map((section) => ({
+              name: section.name,
+              intro: section.intro,
+              title: section.title,
+              subtitle: section.subtitle,
+              description: section.description,
+              order: section.order,
+              buttons: {
+                create: section.buttons.map((btn) => ({
+                  label: btn.label,
+                  linkType: btn.linkType,
+                  value: btn.value,
+                })),
+              },
+              images: {
+                create: section.images.map((img) => ({
+                  url: img.url,
+                  alt: img.alt,
+                })),
+              },
+            })),
+          },
+        },
+        include: {
+          sections: {
+            orderBy: { order: "asc" },
+            include: {
+              buttons: true,
+              images: true,
+            },
+          },
+        },
+      });
+    }),
+
+  // Archive landing page
+  archive: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.landingPage.update({
+        where: {
+          id: input.id,
+          userId: ctx.session.user.id,
+        },
+        data: {
+          archived: true,
+        },
+      });
+    }),
+
+  // Unarchive landing page
+  unarchive: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return ctx.db.landingPage.update({
+        where: {
+          id: input.id,
+          userId: ctx.session.user.id,
+        },
+        data: {
+          archived: false,
+        },
+      });
+    }),
+
   // Update landing page
   update: protectedProcedure
     .input(
@@ -159,6 +284,24 @@ export const landingPageRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { id, ...updateData } = input;
+
+      // If updating URL, check for conflicts
+      if (updateData.url) {
+        const existingPage = await ctx.db.landingPage.findFirst({
+          where: {
+            userId: ctx.session.user.id,
+            url: updateData.url,
+            NOT: { id },
+          },
+        });
+
+        if (existingPage) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "A landing page with this URL already exists",
+          });
+        }
+      }
 
       return ctx.db.landingPage.update({
         where: {

@@ -13,11 +13,15 @@ interface LandingPageCardProps {
     sections: unknown[];
   };
   onDelete: () => void;
+  onArchive: () => void;
+  onDuplicate: () => void;
 }
 
 export function LandingPageCard({
   landingPage,
   onDelete,
+  onArchive,
+  onDuplicate,
 }: LandingPageCardProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -70,17 +74,33 @@ export function LandingPageCard({
           <span>{landingPage.sections.length}/25 sections</span>
         </div>
 
-        <div className="flex space-x-2 border-t border-gray-100 pt-2">
-          <Link href={`/edit/${landingPage.id}`} className="flex-1">
-            <Button variant="secondary" size="sm" className="w-full">
+        <div className="grid grid-cols-2 gap-2 border-t border-gray-100 pt-2">
+          <Link href={`/edit/${landingPage.id}`} className="w-full">
+            <Button variant="success" size="sm" className="w-full">
               Edit
             </Button>
           </Link>
           <Button
+            variant="gray"
+            size="sm"
+            onClick={onArchive}
+            className="w-full"
+          >
+            Archive
+          </Button>
+          <Button
+            variant="warning"
+            size="sm"
+            onClick={onDuplicate}
+            className="w-full"
+          >
+            Duplicate
+          </Button>
+          <Button
             variant="danger"
             size="sm"
             onClick={onDelete}
-            className="px-3"
+            className="w-full"
           >
             Delete
           </Button>
