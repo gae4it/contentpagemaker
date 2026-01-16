@@ -1,15 +1,20 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  protectedProcedure,
+} from "@/server/api/trpc";
 
 const MAX_LANDING_PAGES = 250;
 const MAX_SECTIONS_PER_PAGE = 25;
 
 export const landingPageRouter = createTRPCRouter({
-  // Get all landing pages
-  getAll: publicProcedure.query(async ({ ctx }) => {
+  // Get all landing pages for current user
+  getAll: protectedProcedure.query(async ({ ctx }) => {
     return ctx.db.landingPage.findMany({
+      where: { userId: ctx.session.user.id },
       orderBy: { updatedAt: "desc" },
       include: {
         sections: {
@@ -24,11 +29,14 @@ export const landingPageRouter = createTRPCRouter({
   }),
 
   // Get single landing page by ID
-  getById: publicProcedure
+  getById: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const landingPage = await ctx.db.landingPage.findUnique({
-        where: { id: input.id },
+        where: {
+          id: input.id,
+          userId: ctx.session.user.id,
+        },
         include: {
           sections: {
             orderBy: { order: "asc" },
@@ -51,7 +59,7 @@ export const landingPageRouter = createTRPCRouter({
     }),
 
   // Create new landing page
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
         url: z.string().url("Invalid URL format"),
@@ -93,8 +101,10 @@ export const landingPageRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Check landing page limit
-      const count = await ctx.db.landingPage.count();
+      // Check landing page limit for this user
+      const count = await ctx.db.landingPage.count({
+        where: { userId: ctx.session.user.id },
+      });
       if (count >= MAX_LANDING_PAGES) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
@@ -106,6 +116,7 @@ export const landingPageRouter = createTRPCRouter({
         data: {
           url: input.url,
           description: input.description,
+          userId: ctx.session.user.id,
           sections: input.sections
             ? {
                 create: input.sections.map((section, index) => ({
@@ -142,7 +153,7 @@ export const landingPageRouter = createTRPCRouter({
     }),
 
   // Update landing page
-  update: publicProcedure
+  update: protectedProcedure
     .input(
       z.object({
         id: z.string(),
@@ -154,7 +165,10 @@ export const landingPageRouter = createTRPCRouter({
       const { id, ...updateData } = input;
 
       return ctx.db.landingPage.update({
-        where: { id },
+        where: {
+          id,
+          userId: ctx.session.user.id,
+        },
         data: updateData,
         include: {
           sections: {
@@ -169,20 +183,26 @@ export const landingPageRouter = createTRPCRouter({
     }),
 
   // Delete landing page
-  delete: publicProcedure
+  delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       return ctx.db.landingPage.delete({
-        where: { id: input.id },
+        where: {
+          id: input.id,
+          userId: ctx.session.user.id,
+        },
       });
     }),
 
   // Export landing page to TXT format
-  export: publicProcedure
+  export: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
       const landingPage = await ctx.db.landingPage.findUnique({
-        where: { id: input.id },
+        where: {
+          id: input.id,
+          userId: ctx.session.user.id,
+        },
         include: {
           sections: {
             orderBy: { order: "asc" },

@@ -1,13 +1,13 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 
-import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 
 const MAX_SECTIONS_PER_PAGE = 25;
 
 export const sectionRouter = createTRPCRouter({
   // Create new section
-  create: publicProcedure
+  create: protectedProcedure
     .input(
       z.object({
         landingPageId: z.string(),
@@ -47,6 +47,21 @@ export const sectionRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Verify user owns the landing page
+      const landingPage = await ctx.db.landingPage.findUnique({
+        where: {
+          id: input.landingPageId,
+          userId: ctx.session.user.id,
+        },
+      });
+
+      if (!landingPage) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Landing page not found",
+        });
+      }
+
       // Check section limit for the landing page
       const sectionCount = await ctx.db.section.count({
         where: { landingPageId: input.landingPageId },
@@ -93,7 +108,7 @@ export const sectionRouter = createTRPCRouter({
     }),
 
   // Update section
-  update: publicProcedure
+  update: protectedProcedure
     .input(
       z.object({
         id: z.string(),
@@ -137,6 +152,19 @@ export const sectionRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { id, buttons, images, ...updateData } = input;
 
+      // Verify user owns the section's landing page
+      const section = await ctx.db.section.findUnique({
+        where: { id },
+        include: { landingPage: true },
+      });
+
+      if (!section || section.landingPage.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Section not found",
+        });
+      }
+
       // Delete existing buttons and images, then recreate
       // (Simpler than updating individual items)
       if (buttons !== undefined) {
@@ -174,23 +202,37 @@ export const sectionRouter = createTRPCRouter({
     }),
 
   // Delete section
-  delete: publicProcedure
+  delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
+      // Verify user owns the section's landing page
+      const section = await ctx.db.section.findUnique({
+        where: { id: input.id },
+        include: { landingPage: true },
+      });
+
+      if (!section || section.landingPage.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Section not found",
+        });
+      }
+
       return ctx.db.section.delete({
         where: { id: input.id },
       });
     }),
 
   // Move section up
-  moveUp: publicProcedure
+  moveUp: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const section = await ctx.db.section.findUnique({
         where: { id: input.id },
+        include: { landingPage: true },
       });
 
-      if (!section) {
+      if (!section || section.landingPage.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Section not found",
@@ -235,14 +277,15 @@ export const sectionRouter = createTRPCRouter({
     }),
 
   // Move section down
-  moveDown: publicProcedure
+  moveDown: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const section = await ctx.db.section.findUnique({
         where: { id: input.id },
+        include: { landingPage: true },
       });
 
-      if (!section) {
+      if (!section || section.landingPage.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Section not found",
