@@ -1,289 +1,199 @@
 # ContentPageMaker - Product Requirements Document
 
-## 🎯 Project Status: **READY FOR OAUTH SETUP** ⚙️
+## 🎯 Project Status: **PRODUCTION READY** ✅
 
 **Last Updated**: January 16, 2026  
-**Version**: 2.0.0  
-**Status**: Authentication Implemented - Requires OAuth Configuration
+**Version**: 3.0.0  
+**Status**: Feature Complete - Authentication, Archive, Duplicate, Legal Compliance
 
 ---
 
-## 📋 Project Overview
+## 📋 Executive Summary
 
-ContentPageMaker is a production-ready web application for collecting and organizing textual and media content for landing page creation. Built with the T3 Stack and Neon PostgreSQL, it now features user authentication via NextAuth.js.
+ContentPageMaker is a production-ready web application for collecting, organizing, and managing landing page content. Built with the T3 Stack (Next.js 16, tRPC, Tailwind, Prisma) and Neon PostgreSQL, it features comprehensive user authentication via OAuth, advanced landing page management with archive and duplicate capabilities, and full GDPR/European legal compliance.
 
-### Key Features
+### Key Highlights
 
-- ✅ **User Authentication** - GitHub and Google OAuth providers
-- ✅ **Section Management** - Create, edit, reorder, and delete sections
-- ✅ **Content Organization** - Manage text content, buttons (up to 3), and external images (up to 8)
-- ✅ **Landing Page Management** - Create up to 250 landing pages per user, each with up to 25 sections
-- ✅ **Export Functionality** - Export landing pages to formatted TXT files
-- ✅ **Search Filtering** - Filter landing pages by URL or description
-- ✅ **Real-time Feedback** - Toast notifications for all user actions
-- ✅ **Responsive Design** - Works seamlessly on desktop and mobile
+✅ **Multi-Provider Authentication** - GitHub, Google OAuth + Guest mode  
+✅ **Advanced Landing Page Management** - Unlimited pages with archive/restore and duplicate  
+✅ **Unique URL Enforcement** - Per-user URL constraints prevent duplicates  
+✅ **Section Organization** - Up to 25 sections per page with rich content  
+✅ **Content Management** - Text, buttons (up to 3), external images (up to 8)  
+✅ **Export Functionality** - Formatted TXT file exports  
+✅ **SEO Blocking** - Completely invisible to search engines  
+✅ **Legal Compliance** - GDPR Privacy Policy, Terms of Service, German Impressum  
+✅ **Responsive Design** - Optimized for desktop and mobile
 
 ---
 
-## 🛠 Tech Stack
+## 🛠 Technology Stack
 
-| Layer                | Technology         | Version    |
-| -------------------- | ------------------ | ---------- |
-| **Frontend**         | Next.js            | 16.1.2     |
-| **Language**         | TypeScript         | 5.x        |
-| **Framework**        | React              | 19.2.3     |
-| **Styling**          | Tailwind CSS       | 4.1.18     |
-| **API Layer**        | tRPC               | 11.8.1     |
-| **Database**         | PostgreSQL (Neon)  | 16         |
-| **ORM**              | Prisma             | 7.2.0      |
-| **Authentication**   | NextAuth.js        | 5.0.0-beta |
-| **Database Adapter** | @prisma/adapter-pg | Latest     |
-| **Form Management**  | React Hook Form    | 7.71.1     |
-| **Validation**       | Zod                | 4.3.5      |
-| **State Management** | Zustand            | 5.0.10     |
-| **UI Components**    | @headlessui/react  | 2.2.9      |
-| **Notifications**    | react-hot-toast    | 2.6.0      |
+| Layer             | Technology        | Version       | Purpose                         |
+| ----------------- | ----------------- | ------------- | ------------------------------- |
+| **Frontend**      | Next.js           | 16.1.2        | React framework with App Router |
+| **Language**      | TypeScript        | 5.9.3         | Type-safe development           |
+| **UI**            | React             | 19.2.3        | Component library               |
+| **Styling**       | Tailwind CSS      | 4.1.18        | Utility-first CSS               |
+| **API**           | tRPC              | 11.8.1        | End-to-end type safety          |
+| **Database**      | PostgreSQL (Neon) | 16            | Serverless PostgreSQL           |
+| **ORM**           | Prisma            | 6.19.2        | Database toolkit                |
+| **Auth**          | NextAuth.js       | 5.0.0-beta.30 | OAuth + session management      |
+| **Validation**    | Zod               | 4.3.5         | Schema validation               |
+| **State**         | Zustand           | 5.0.10        | Client state management         |
+| **UI Components** | Headless UI       | 2.2.9         | Accessible components           |
+| **Notifications** | react-hot-toast   | 2.6.0         | Toast notifications             |
+| **Build**         | Turbopack         | Built-in      | Fast Next.js 16 bundler         |
 
 ---
 
 ## 🗄 Database Schema
 
-### Authentication Models (NextAuth.js)
+### Authentication Models (NextAuth.js v5)
 
-#### User
+**User**
 
-- `id` (String, CUID, Primary Key)
-- `name` (String, nullable)
-- `email` (String, unique, nullable)
-- `emailVerified` (DateTime, nullable)
-- `image` (String, nullable)
+- `id` (String, CUID, PK)
+- `name`, `email`, `emailVerified`, `image` (nullable)
 - Relations: `accounts[]`, `sessions[]`, `landingPages[]`
 
-#### Account
+**Account** (OAuth Provider Data)
 
-- `id` (String, CUID, Primary Key)
-- `userId` (String, Foreign Key → User)
-- `type` (String)
-- `provider` (String)
-- `providerAccountId` (String)
-- `refresh_token`, `access_token`, `expires_at`, `token_type`, `scope`, `id_token`, `session_state`
-- Unique constraint: [provider, providerAccountId]
+- `id` (String, CUID, PK), `userId` (FK)
+- `provider`, `providerAccountId`, OAuth tokens
+- Unique: `[provider, providerAccountId]`
 
-#### Session
+**Session**
 
-- `id` (String, CUID, Primary Key)
-- `sessionToken` (String, unique)
-- `userId` (String, Foreign Key → User)
-- `expires` (DateTime)
+- `id` (String, CUID, PK), `sessionToken` (unique)
+- `userId` (FK), `expires` (DateTime)
 
-#### VerificationToken
+**VerificationToken**
 
-- `identifier` (String)
-- `token` (String, unique)
-- `expires` (DateTime)
-- Unique constraint: [identifier, token]
+- `identifier`, `token`, `expires`
+- Unique: `[identifier, token]`
 
 ### Application Models
 
-#### LandingPage (250 max per user)
+**LandingPage**
 
-- `id` (String, CUID, Primary Key)
-- `url` (String)
-- `description` (String)
-- `userId` (String, Foreign Key → User) **NEW**
-- `createdAt` (DateTime)
-- `updatedAt` (DateTime)
+- `id` (String, CUID, PK)
+- `url` (String), `description` (String)
+- `archived` (Boolean, default: false) **NEW v3.0**
+- `userId` (String, FK, nullable)
+- `createdAt`, `updatedAt` (DateTime)
+- **Unique**: `[userId, url]` **NEW v3.0**
 - Relations: `user`, `sections[]`
 
-#### Section (25 max per page)
+**Section** (Max 25 per page)
 
-- `id` (String, CUID, Primary Key)
-- `name` (String)
-- `intro` (String, 80 chars max)
-- `title` (String, 80 chars max)
-- `subtitle` (String, 160 chars max)
-- `description` (String)
-- `order` (Int)
-- `landingPageId` (String, Foreign Key)
+- `id` (String, CUID, PK)
+- `name`, `intro` (80 chars), `title` (80 chars), `subtitle` (160 chars), `description`
+- `order` (Int), `landingPageId` (FK)
 - Relations: `landingPage`, `buttons[]`, `images[]`
 
-#### Button (3 max per section)
+**Button** (Max 3 per section)
 
-- `id` (String, CUID, Primary Key)
-- `label` (String)
-- `linkType` (Enum: "url" | "scroll")
-- `value` (String)
-- `sectionId` (String, Foreign Key)
+- `id` (String, CUID, PK)
+- `label`, `linkType` (enum: "url" | "scroll"), `value`
+- `sectionId` (FK)
 
-#### Image (8 max per section)
+**Image** (Max 8 per section)
 
-- `id` (String, CUID, Primary Key)
-- `url` (String, external URL only)
-- `alt` (String)
-- `sectionId` (String, Foreign Key)
+- `id` (String, CUID, PK)
+- `url` (external URL), `alt` (optional)
+- `sectionId` (FK)
 
 ---
 
-## 🔐 Authentication System
+## 🔐 Authentication & Authorization
 
 ### OAuth Providers
 
-- **GitHub** - Primary authentication method
-- **Google** - Secondary authentication method
-
-### Protected Routes
-
-All application routes except `/auth/signin` require authentication.
+1. **GitHub OAuth** - Primary authentication
+2. **Google OAuth** - Secondary authentication
+3. **Guest Account** **NEW v3.0** - Shared anonymous account (no OAuth needed)
 
 ### Session Management
 
-- Database sessions via Prisma adapter
-- Session expires after 30 days (NextAuth default)
-- Automatic session refresh on client
+- **Strategy**: JWT-based (required for guest mode)
+- **Expiration**: 30 days
+- **Storage**: Database for OAuth, JWT-only for guests
+- **Security**: HTTPS-only cookies, CSRF protection
 
-### Protected tRPC Procedures
+### Protected Routes
 
-All mutations and queries use `protectedProcedure`:
+- **Public**: `/auth/signin`, `/privacy`, `/terms`, `/legal`
+- **Protected**: All others (via `src/proxy.ts` middleware)
+- **API**: All tRPC procedures use `protectedProcedure`
 
-- User must be authenticated
-- Session context available in `ctx.session`
-- User ID automatically injected for data isolation
+### User Isolation
 
----
-
-## 📁 Project Structure
-
-```
-c:\DEV\contentpagemaker\
-├── prisma/
-│   ├── schema.prisma         # Updated with User models
-│   └── migrations/           # Migration history
-├── prisma.config.ts          # Prisma 7 datasource config (NEW)
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx        # Updated with AuthProvider
-│   │   ├── page.tsx          # Updated with auth check
-│   │   ├── auth/
-│   │   │   └── signin/
-│   │   │       └── page.tsx  # Sign-in page (NEW)
-│   │   ├── api/
-│   │   │   ├── auth/
-│   │   │   │   └── [...nextauth]/
-│   │   │   │       └── route.ts  # NextAuth API route (NEW)
-│   │   │   └── trpc/
-│   │   ├── add/
-│   │   ├── edit/
-│   │   └── _components/
-│   ├── components/
-│   │   ├── AuthProvider.tsx  # SessionProvider wrapper (NEW)
-│   │   ├── Header.tsx        # Header with user info (NEW)
-│   │   ├── ConfirmModal.tsx
-│   │   ├── ExportButton.tsx
-│   │   ├── LandingPageCard.tsx
-│   │   ├── SectionCard.tsx
-│   │   ├── SectionEditor.tsx
-│   │   └── ui/
-│   ├── server/
-│   │   ├── auth.ts           # NextAuth config (NEW)
-│   │   ├── auth/
-│   │   │   └── index.ts      # Auth helpers (NEW)
-│   │   ├── db.ts             # Updated for Prisma 7
-│   │   └── api/
-│   │       ├── trpc.ts       # Updated with auth context
-│   │       ├── root.ts
-│   │       └── routers/
-│   │           ├── landingpage.ts  # Updated with protectedProcedure
-│   │           └── section.ts      # Updated with protectedProcedure
-│   ├── middleware.ts         # Auth middleware (NEW)
-│   └── env.js                # Updated with auth env vars
-└── package.json
-└── package.json
-```
+- Each user sees only their own landing pages
+- Guest users share common data pool
+- `userId` checked on all operations
+- Unique URL constraint per user
 
 ---
 
-## 🚀 Recent Changes (v2.0.0)
+## 🎯 Core Features
 
-### ✅ Completed - Prisma 7 Migration
+### 1. Landing Page Management
 
-- Created [prisma.config.ts](prisma.config.ts) for datasource configuration
-- Updated [prisma/schema.prisma](prisma/schema.prisma) to remove `url` property
-- Modified [src/server/db.ts](src/server/db.ts) to use `@prisma/adapter-pg`
-- Installed `pg` and `@prisma/adapter-pg` packages
+**Create** - Input URL (unique per user) + description  
+**View/Edit** - Active and archived sections with search  
+**Archive/Restore** **v3.0** - Move between active/archived  
+**Duplicate** **v3.0** - Copy with auto-generated URL suffix (`-2`, `-3`)  
+**Delete** - Permanent with confirmation modal
 
-### ✅ Completed - NextAuth.js Integration
+### 2. Section Management
 
-- Added NextAuth.js v5 (beta) with GitHub and Google providers
-- Created authentication models: User, Account, Session, VerificationToken
-- Added `userId` foreign key to LandingPage model
-- Updated all tRPC procedures to use `protectedProcedure`
-- Created sign-in page at [/auth/signin](src/app/auth/signin/page.tsx)
-- Added [Header](src/components/Header.tsx) component with user info and sign-out
-- Implemented [AuthProvider](src/components/AuthProvider.tsx) wrapper
-- Created [middleware.ts](src/middleware.ts) for route protection
-- Updated [env.js](src/env.js) with authentication environment variables
+- Create/edit up to 25 sections per page
+- Reorder with up/down buttons
+- Rich content: name, intro, title, subtitle, description
+- Buttons (max 3): label, type (url/scroll), value
+- Images (max 8): external URLs + alt text
 
-### ✅ Completed - Data Isolation
+### 3. Export Functionality
 
-- All landing pages now belong to authenticated users
-- Users can only view/edit/delete their own landing pages
-- Section operations verify landing page ownership
-- Landing page limit (250) enforced per user
+Export to formatted TXT:
 
----
+```
+LANDING PAGE: [url]
+DESCRIPTION: [description]
 
-## ⚙️ Environment Variables
-
-Create a `.env` file in the project root with the following variables:
-
-```env
-# Database (Neon PostgreSQL)
-DATABASE_URL="postgresql://username:password@host/database?sslmode=require"
-
-# NextAuth.js
-NEXTAUTH_SECRET="your-secret-key-here-generate-with-openssl-rand-base64-32"
-NEXTAUTH_URL="http://localhost:3000"
-
-# GitHub OAuth
-GITHUB_CLIENT_ID="your-github-oauth-app-client-id"
-GITHUB_CLIENT_SECRET="your-github-oauth-app-client-secret"
-
-# Google OAuth
-GOOGLE_CLIENT_ID="your-google-oauth-client-id"
-GOOGLE_CLIENT_SECRET="your-google-oauth-client-secret"
-
-# Node Environment
-NODE_ENV="development"
+=== SECTION 1: [name] ===
+Intro: ...
+Buttons: [label] -> [value] (type)
+Images: [url1], [url2]
 ```
 
-### Setting Up OAuth Providers
+### 4. SEO Blocking **NEW v3.0**
 
-#### GitHub OAuth App
+- **robots.txt**: Blocks all crawlers (Google, Bing, DuckDuckGo, etc.)
+- **Meta tags**: `noindex`, `nofollow`, `nocache`
+- Complete invisibility to search engines
 
-1. Go to https://github.com/settings/developers
-2. Click "New OAuth App"
-3. Fill in:
-   - Application name: `ContentPageMaker`
-   - Homepage URL: `http://localhost:3000`
-   - Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
-4. Copy Client ID and Client Secret to `.env`
+### 5. Legal Compliance **NEW v3.0**
 
-#### Google OAuth Client
+**Privacy Policy** (`/privacy`) - GDPR compliant
 
-1. Go to https://console.cloud.google.com/
-2. Create a new project or select existing
-3. Navigate to "APIs & Services" > "Credentials"
-4. Click "Create Credentials" > "OAuth client ID"
-5. Configure consent screen if prompted
-6. Select "Web application"
-7. Add authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
-8. Copy Client ID and Client Secret to `.env`
+- Data collection, legal basis, user rights (Art. 15-21)
+- Retention, security, international transfers
+- Cookie notice (session-only)
 
-### Generate NEXTAUTH_SECRET
+**Terms of Service** (`/terms`)
 
-```bash
-openssl rand -base64 32
-```
+- Service description, user conduct, content ownership
+- Disclaimers, liability limits, indemnification
+- Governing law: Germany
+
+**Legal Notice/Impressum** (`/legal`)
+
+- §5 TMG compliance (German law)
+- Contact details template (requires user input)
+- EU dispute resolution, liability clauses
+
+**Footer** - Persistent legal links on all pages
 
 ---
 
@@ -291,487 +201,290 @@ openssl rand -base64 32
 
 ### Prerequisites
 
-- Node.js 18+
-- npm or pnpm
+- Node.js 18+, npm
 - Neon PostgreSQL database
-- GitHub OAuth App credentials
-- Google OAuth Client credentials
+- OAuth credentials (or use guest mode)
 
-### Setup Steps
+### Quick Start
 
-1. **Clone and Install**
+```bash
+# 1. Install
+npm install
 
-   ```bash
-   cd c:\DEV\contentpagemaker
-   npm install
-   ```
+# 2. Configure .env
+NEXTAUTH_URL=http://localhost:3000  # NO trailing slash
+NEXTAUTH_SECRET=<generate-with-openssl>
+DATABASE_URL=<neon-postgresql-url>
+GITHUB_CLIENT_ID=<your-id>
+GITHUB_CLIENT_SECRET=<your-secret>
+GOOGLE_CLIENT_ID=<your-id>
+GOOGLE_CLIENT_SECRET=<your-secret>
 
-2. **Configure Environment**
-   - Create `.env` file (see Environment Variables section)
-   - Add database URL
-   - Configure OAuth providers
-   - Generate NEXTAUTH_SECRET
+# Generate secret:
+openssl rand -base64 32
+# OR
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
-3. **Run Database Migration**
+# 3. Setup OAuth
+# GitHub: https://github.com/settings/developers
+#   Callback: http://localhost:3000/api/auth/callback/github
+# Google: https://console.cloud.google.com/apis/credentials
+#   Redirect: http://localhost:3000/api/auth/callback/google
 
-   ```bash
-   npm run db:generate
-   ```
+# 4. Migrate database
+npx prisma migrate dev
 
-   This will:
-   - Create all tables (users, accounts, sessions, landing_pages, sections, buttons, images)
-   - Apply Prisma 7 configuration
-   - Generate Prisma Client
+# 5. Run
+npm run dev
+```
 
-4. **Start Development Server**
-
-   ```bash
-   npm run dev
-   ```
-
-5. **Access Application**
-   - Open http://localhost:3000
-   - Sign in with GitHub or Google
-   - Start creating landing pages
+Access at http://localhost:3000
 
 ---
 
-## 🔧 Available Scripts
+## 🚀 Available Scripts
 
-```json
-{
-  "dev": "next dev --turbo", // Start dev server with Turbo
-  "build": "next build", // Build for production
-  "start": "next start", // Start production server
-  "preview": "next build && next start", // Build and preview
-  "lint": "eslint .", // Run ESLint
-  "lint:fix": "eslint . --fix", // Fix ESLint errors
-  "format": "prettier --check .", // Check formatting
-  "format:fix": "prettier --write .", // Fix formatting
-  "typecheck": "tsc --noEmit", // TypeScript check
-  "check": "npm run lint && npm run format && npm run typecheck",
-  "fix": "npm run lint:fix && npm run format:fix",
-  "db:generate": "prisma migrate dev", // Run migrations
-  "db:migrate": "prisma migrate deploy", // Deploy migrations
-  "db:push": "prisma db push", // Push schema changes
-  "db:studio": "prisma studio", // Open Prisma Studio
-  "postinstall": "prisma generate" // Auto-generate after install
-}
+```bash
+npm run dev          # Dev server with Turbopack
+npm run build        # Production build
+npm run start        # Production server
+npm run lint         # ESLint check
+npm run fix          # Auto-fix lint + format
+npm run check        # Lint + format + typecheck
+npx prisma studio    # Database GUI
 ```
 
 ---
 
-## 🎨 Design Specifications
-
-### UI Guidelines
-
-- **Modern simple cards** with rounded borders
-- **NO animations** (as specified)
-- **Responsive design** for desktop and mobile
-- **Clean typography** using Geist font
-- **Consistent spacing** with Tailwind
-
-### Color Scheme
-
-- Primary: Blue accent
-- Background: Gray-50
-- Cards: White with gray borders
-- Text: Gray-900 (headings), Gray-600 (body)
-
-### Components
-
-- Buttons: Primary, Secondary, Outline variants
-- Forms: Validated inputs with error states
-- Modals: Headless UI with smooth transitions
-- Toast: Hot-toast for notifications
-
----
-
-## 📊 API Routes (tRPC)
+## 📊 API Endpoints (tRPC)
 
 ### Landing Page Router
 
-#### `landingpage.getAll`
+**Queries**
 
-- **Type**: Query (Protected)
-- **Returns**: Array of landing pages for current user
-- **Includes**: Sections with buttons and images
+- `getAll({ archived?: boolean })` - List active/archived pages **v3.0**
+- `getById({ id })` - Single page with ownership check
+- `export({ id })` - TXT export
 
-#### `landingpage.getById`
+**Mutations**
 
-- **Type**: Query (Protected)
-- **Input**: `{ id: string }`
-- **Returns**: Single landing page with sections
-- **Validation**: User owns the landing page
-
-#### `landingpage.create`
-
-- **Type**: Mutation (Protected)
-- **Input**: URL, description, optional sections array
-- **Validation**:
-  - User has < 250 landing pages
-  - Valid URL format
-  - Section limit (25 max)
-- **Returns**: Created landing page with ID
-
-#### `landingpage.update`
-
-- **Type**: Mutation (Protected)
-- **Input**: `{ id, url?, description? }`
-- **Validation**: User owns the landing page
-- **Returns**: Updated landing page
-
-#### `landingpage.delete`
-
-- **Type**: Mutation (Protected)
-- **Input**: `{ id: string }`
-- **Validation**: User owns the landing page
-- **Effect**: Cascade deletes sections, buttons, images
-
-#### `landingpage.export`
-
-- **Type**: Query (Protected)
-- **Input**: `{ id: string }`
-- **Returns**: TXT formatted content with metadata
-- **Validation**: User owns the landing page
+- `create({ url, description, sections? })` - Create with URL uniqueness check **v3.0**
+- `update({ id, url?, description? })` - Update with conflict check **v3.0**
+- `duplicate({ id })` - Copy with auto-suffix **v3.0**
+- `archive({ id })` - Move to archived **v3.0**
+- `unarchive({ id })` - Restore to active **v3.0**
+- `delete({ id })` - Permanent deletion
 
 ### Section Router
 
-#### `section.create`
+**Queries**
 
-- **Type**: Mutation (Protected)
-- **Input**: Landing page ID, section data, buttons, images
-- **Validation**:
-  - User owns the landing page
-  - Section count < 25 per page
-  - Button limit (3 max)
-  - Image limit (8 max)
-  - Character limits on text fields
-- **Returns**: Created section with order number
+- `getAll({ landingPageId })` - List sections
 
-#### `section.update`
+**Mutations**
 
-- **Type**: Mutation (Protected)
-- **Input**: Section ID, updated fields
-- **Validation**: User owns the landing page
-- **Effect**: Replaces buttons/images arrays
-- **Returns**: Updated section
-
-#### `section.delete`
-
-- **Type**: Mutation (Protected)
-- **Input**: `{ id: string }`
-- **Validation**: User owns the landing page
-- **Effect**: Cascade deletes buttons and images
-
-#### `section.moveUp`
-
-- **Type**: Mutation (Protected)
-- **Input**: `{ id: string }`
-- **Validation**:
-  - User owns the landing page
-  - Section not already at top
-- **Effect**: Swaps order with section above
-
-#### `section.moveDown`
-
-- **Type**: Mutation (Protected)
-- **Input**: `{ id: string }`
-- **Validation**:
-  - User owns the landing page
-  - Section not already at bottom
-- **Effect**: Swaps order with section below
+- `create({ landingPageId, ...fields })` - Create (25 max)
+- `update({ id, ...fields })` - Update content
+- `reorder({ id, direction })` - Up/down reordering
+- `delete({ id })` - Delete with cascade
 
 ---
 
-## 🚨 Known Issues & Migration Notes
+## 🎨 UI Components
 
-### ⚠️ Breaking Changes in v2.0.0
+### Custom Button Variants **v3.0**
 
-1. **Database Migration Required**
-   - LandingPage now requires `userId`
-   - Existing data will need migration or will be lost
-   - Run `npm run db:generate` to create new tables
+- `primary` - Blue (default)
+- `secondary` - Gray
+- `danger` - Red (delete)
+- `success` - Green (edit) **NEW**
+- `warning` - Yellow (duplicate) **NEW**
+- `gray` - Gray (archive/restore) **NEW**
+- `ghost`, `outline` - Transparent/border
 
-2. **Authentication Required**
-   - All routes now require authentication
-   - Users must sign in before accessing any pages
-   - OAuth providers must be configured
+### Landing Page Card **v3.0**
 
-3. **Prisma 7 Configuration**
-   - `prisma.config.ts` now required
-   - `url` property removed from schema.prisma
-   - PostgreSQL adapter explicitly required
-
-### 🔄 Data Migration Strategy
-
-If you have existing landing pages:
-
-**Option A: Assign to First User**
-
-```sql
--- After first user signs in, get their ID
-SELECT id FROM users LIMIT 1;
-
--- Update all landing pages
-UPDATE landing_pages SET "userId" = 'USER_ID_HERE';
-```
-
-**Option B: Fresh Start**
-
-```bash
-# Drop and recreate database
-npm run db:push -- --force-reset
-npm run db:generate
-```
-
----
-
-## 📝 Export Format Specification
-
-Landing pages export to TXT format:
+4-button grid:
 
 ```
-LANDING PAGE: https://example.com
-DESCRIPTION: Example landing page description
+[ Edit (green)     ] [ Archive/Restore (gray) ]
+[ Duplicate (yellow) ] [ Delete (red)        ]
+```
 
-=== SECTION 1: Hero Section ===
-Intro: Welcome to our product
-Title: Amazing Product
-Subtitle: The best solution for your needs
-Description: Long description text here...
-Buttons: Get Started -> /signup (url), Learn More -> #features (scroll)
-Images: https://example.com/image1.jpg, https://example.com/image2.jpg
-
-=== SECTION 2: Features ===
-Title: Key Features
-Description: Feature details...
+Prop: `isArchived` controls Archive/Restore button text
 
 ---
-Total Sections: 2
-Generated: 1/16/2026, 2:30:00 PM
+
+## 🔒 Security & Privacy
+
+### GDPR Compliance
+
+- Minimal data collection (OAuth profile only)
+- User rights: access, rectification, erasure, portability
+- Data retention: until deletion + 30 days
+- International transfers via SCCs
+
+### Security Measures
+
+- HTTPS enforced
+- CSRF protection (NextAuth)
+- SQL injection prevented (Prisma)
+- XSS protection (React auto-escape)
+- HTTP-only cookies, SameSite strict
+
+---
+
+## 🌍 Deployment
+
+### Vercel (Recommended)
+
+1. Push to GitHub
+2. Import to Vercel (auto-detects Next.js)
+3. Set env vars (without trailing slash in `NEXTAUTH_URL`)
+4. Update OAuth callbacks to production URLs
+5. Deploy
+
+**Production OAuth Callbacks:**
+
+- GitHub: `https://your-domain.vercel.app/api/auth/callback/github`
+- Google: `https://your-domain.vercel.app/api/auth/callback/google`
+
+---
+
+## 📁 Project Structure
+
+```
+contentpagemaker/
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/
+│       ├── 20251012213314_init/
+│       ├── 20260116135510_add_authentication/
+│       ├── 20260116180322_create_guest_user/
+│       └── 20260116183242_add_archived_and_unique_url/
+├── public/
+│   ├── favicon.ico
+│   └── robots.txt                  # Search engine blocking
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx              # SEO blocking + Footer
+│   │   ├── page.tsx
+│   │   ├── add/page.tsx
+│   │   ├── edit/
+│   │   │   ├── page.tsx            # Active + archived sections
+│   │   │   └── [id]/page.tsx
+│   │   ├── auth/signin/page.tsx    # OAuth + Guest
+│   │   ├── privacy/page.tsx        # GDPR Privacy Policy
+│   │   ├── terms/page.tsx          # Terms of Service
+│   │   ├── legal/page.tsx          # German Impressum
+│   │   └── api/
+│   │       ├── auth/[...nextauth]/route.ts
+│   │       └── trpc/[trpc]/route.ts
+│   ├── components/
+│   │   ├── AuthProvider.tsx
+│   │   ├── Header.tsx
+│   │   ├── Footer.tsx              # Legal links
+│   │   ├── LandingPageCard.tsx     # 4-button grid + isArchived
+│   │   ├── SectionCard.tsx
+│   │   └── ui/
+│   │       └── Button.tsx          # 7 variants
+│   ├── server/
+│   │   ├── auth.ts                 # NextAuth + Guest provider
+│   │   ├── db.ts
+│   │   └── api/
+│   │       ├── trpc.ts
+│   │       └── routers/
+│   │           ├── landingpage.ts  # Archive, duplicate, unique URL
+│   │           └── section.ts
+│   ├── lib/
+│   │   ├── utils.ts
+│   │   └── validations.ts          # No 250-page limit
+│   ├── proxy.ts                    # Route protection
+│   └── env.js
+├── .env                            # Git-ignored
+├── package.json
+├── PRD.md                          # This file
+└── README.md
 ```
 
 ---
 
-## 🎯 Future Enhancements
+## 📝 Changelog
 
-### Planned Features
+### v3.0.0 (January 16, 2026)
 
-- [ ] Role-based access control (Admin/User)
-- [ ] Team collaboration (share landing pages)
-- [ ] Template system for common sections
-- [ ] HTML/JSON export formats
-- [ ] Drag-and-drop section reordering
-- [ ] Image upload to cloud storage
-- [ ] Rich text editor for descriptions
-- [ ] Landing page preview mode
-- [ ] Version history/undo functionality
-- [ ] Bulk operations (duplicate, archive)
+**Added**
 
-### Infrastructure
+- Archive/restore landing pages
+- Duplicate with auto URL suffix
+- Unique URL constraint per user
+- SEO blocking (robots.txt + meta)
+- Privacy Policy (GDPR)
+- Terms of Service
+- Legal Notice/Impressum (German law)
+- Footer with legal links
+- Guest account (shared)
+- JWT sessions
 
-- [ ] Automated testing (Jest, Playwright)
-- [ ] CI/CD pipeline (GitHub Actions)
-- [ ] Docker containerization
-- [ ] Redis caching for sessions
-- [ ] Rate limiting on API
-- [ ] Monitoring and logging (Sentry)
+**Changed**
 
----
+- Removed 250-page limit
+- Button colors: green (edit), yellow (duplicate), gray (archive)
+- 2x2 button grid in cards
+- Edit page: separated active/archived sections
 
-## 🚀 Deployment Checklist
+**Database**
 
-### Pre-Deployment
+- Added `archived` Boolean
+- Added `@@unique([userId, url])`
 
-- [x] All TypeScript errors resolved
-- [x] ESLint and Prettier configured
-- [ ] Environment variables documented
-- [ ] Database migrations tested
-- [ ] OAuth providers configured (production)
-- [ ] NEXTAUTH_SECRET generated
-- [ ] NEXTAUTH_URL set to production domain
+### v2.0.0 (January 16, 2026)
 
-### Vercel Deployment
+- NextAuth.js v5 integration
+- GitHub + Google OAuth
+- User isolation
+- Protected routes
+- Prisma downgrade to v6.19.2
 
-1. **Connect Repository**
-   - Push to GitHub
-   - Import in Vercel
+### v1.0.0 (October 12, 2025)
 
-2. **Configure Environment Variables**
-   - Add all `.env` variables in Vercel dashboard
-   - Update `NEXTAUTH_URL` to production URL
-   - Update OAuth callback URLs
-
-3. **Database Setup**
-   - Ensure Neon database is accessible
-   - Run migrations: `npm run db:migrate`
-
-4. **Deploy**
-
-   ```bash
-   vercel --prod
-   ```
-
-5. **Post-Deployment**
-   - Test authentication flow
-   - Verify landing page CRUD
-   - Check export functionality
-   - Monitor error logs
+- Initial release
+- Landing page CRUD
+- Section management
+- Export to TXT
 
 ---
 
-## 📚 Additional Resources
+## ⚠️ Important Notes
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [tRPC Documentation](https://trpc.io/docs)
-- [Prisma Documentation](https://www.prisma.io/docs)
-- [NextAuth.js Documentation](https://next-auth.js.org/)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [Neon Database Documentation](https://neon.tech/docs)
+### Legal Compliance
 
----
+**⚠️ REQUIRED**: Update `/legal` page with your actual contact information before deployment. German law (§5 TMG) mandates complete Impressum. Placeholder text is marked in red.
 
-## 👥 Contributing
+### OAuth Setup
 
-This is an internal tool. For questions or issues, contact the development team.
+- **Local**: `http://localhost:3000` callbacks
+- **Production**: `https://your-domain.vercel.app` callbacks (no trailing slash)
+- **Guest mode**: Works without OAuth
 
----
+### Database
 
-**Last Updated**: January 16, 2026  
-**Document Version**: 2.0.0
-
-- Confirmation dialogs for destructive actions
-
-- [x] **Documentation**
-  - Comprehensive README.md
-  - This CHANGES.md file
-  - Inline code comments
-  - Type definitions
+- Guest user ID: `guest-user-shared-account` (created via migration)
+- JWT sessions required for guest mode
+- Each user sees only their own pages (guests share pool)
 
 ---
 
-## 🔧 **TECHNICAL IMPLEMENTATION DETAILS**
+## 📞 Support
 
-### **Database Schema**
-
-```sql
-landing_pages: id(cuid), url, description, created_at, updated_at
-sections: id(cuid), name, intro, title, subtitle, description, order, landing_page_id
-buttons: id(cuid), label, link_type, value, section_id
-images: id(cuid), url, alt, section_id
-```
-
-### **API Endpoints (tRPC)**
-
-```typescript
-landingPage.getAll(); // Get all landing pages
-landingPage.getById(); // Get single landing page
-landingPage.create(); // Create with sections
-landingPage.update(); // Update landing page info
-landingPage.delete(); // Delete with cascade
-landingPage.export(); // Export to TXT format
-
-section.create(); // Add section to landing page
-section.update(); // Update section content
-section.delete(); // Delete section
-section.moveUp(); // Move section up
-section.moveDown(); // Move section down
-```
-
-### **Component Architecture**
-
-- **UI Components**: Button, Input, Textarea, Modal (reusable)
-- **Business Components**: SectionCard, LandingPageCard, SectionEditor
-- **Pages**: Home, Add, Edit List, Edit Detail
-- **State**: Zustand store + tRPC queries/mutations
+- Review this PRD thoroughly
+- Check Privacy Policy, Terms, Legal Notice
+- Verify env vars and OAuth callbacks
+- Ensure `NEXTAUTH_URL` has no trailing slash
 
 ---
 
-## 📊 **PROJECT METRICS**
-
-- **Total Files Created**: 26 new files
-- **Lines of Code**: ~2,175 lines added
-- **Components**: 10 reusable components
-- **Pages**: 4 main pages
-- **API Endpoints**: 10 tRPC procedures
-- **Database Tables**: 4 related tables
-
----
-
-## 🚀 **DEPLOYMENT READY**
-
-The application is fully functional and ready for deployment:
-
-1. ✅ All features implemented according to specifications
-2. ✅ Database connected and migrations applied
-3. ✅ Error handling and validation in place
-4. ✅ Responsive design working correctly
-5. ✅ Export functionality tested
-6. ✅ Toast notifications working
-7. ✅ All limits enforced properly
-
----
-
-## 🎯 **SUCCESS CRITERIA - ALL MET** ✅
-
-- [x] All pages render correctly and are responsive
-- [x] Users can create, edit, and delete landing pages (max 250)
-- [x] Users can add, edit, reorder, and delete sections (max 25 per page)
-- [x] All form validations work properly with limits enforced
-- [x] Up/down reordering functionality works smoothly (universal desktop/mobile)
-- [x] Search and filtering work correctly
-- [x] TXT export functionality works for landing pages
-- [x] All confirmation modals appear for destructive actions
-- [x] Toast notifications work with react-hot-toast
-- [x] Modern simple card design with rounded borders implemented
-- [x] Data persists correctly in Neon PostgreSQL
-- [x] Ready for deployment to Vercel
-
----
-
-## 🔄 **FUTURE ENHANCEMENTS** (Not Required)
-
-These are potential improvements that could be added in the future:
-
-- [ ] Bulk operations (delete multiple landing pages)
-- [ ] Landing page duplication
-- [ ] Advanced search filters
-- [ ] Export to other formats (JSON, CSV)
-- [ ] Dark mode theme
-- [ ] User authentication and multi-tenancy
-- [ ] Landing page preview functionality
-- [ ] Drag and drop file uploads for images
-- [ ] Section templates/presets
-- [ ] Undo/redo functionality
-
----
-
-## 📝 **NOTES FOR DEVELOPERS**
-
-### **Getting Started**
-
-1. Clone repository
-2. Install dependencies with `npm install`
-3. Set up Neon database and update `.env`
-4. Run `npx prisma migrate dev`
-5. Start with `npm run dev`
-
-### **Key Technologies**
-
-- **Frontend**: Next.js 15, TypeScript, Tailwind CSS
-- **Backend**: tRPC, Prisma, Neon PostgreSQL
-- **State**: Zustand, React Hook Form
-- **UI**: Headless UI, react-hot-toast
-
-### **Code Organization**
-
-- Components follow atomic design principles
-- TypeScript types are properly defined
-- Error handling is consistent throughout
-- Code is formatted with Prettier and linted with ESLint
-
----
-
-**Project Status**: ✅ **PRODUCTION READY**  
-**Next Steps**: Deploy to Vercel and start using the application!
+**Status**: ✅ **PRODUCTION READY**  
+**Deployment**: Ready for Vercel  
+**Legal**: Compliant (pending Impressum contact info)  
+**Last Updated**: January 16, 2026

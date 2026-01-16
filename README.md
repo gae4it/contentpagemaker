@@ -1,147 +1,204 @@
 # ContentPageMaker
 
-A complete **ContentPageMaker** web application built with the T3 Stack for collecting and organizing textual and media content for landing page creation.
+**Version 3.0.0** - Production-ready landing page content management system with multi-provider authentication, archive/duplicate features, and full GDPR/EU legal compliance.
 
-## 🚀 Features
+---
 
-- **Modern UI**: Clean, simple interface with rounded borders and no animations
-- **Section Management**: Create, edit, reorder, and delete sections with up/down buttons
-- **Content Organization**: Manage text content, buttons, and external images
-- **Export Functionality**: Export landing pages to formatted TXT files
-- **Limits Enforcement**: Maximum 250 landing pages, 25 sections per page
-- **Responsive Design**: Works seamlessly on desktop and mobile
-- **Real-time Feedback**: Toast notifications for all user actions
+## ✨ Features
 
-## 🧰 Tech Stack
+### Core Functionality
 
-| Technology            | Purpose                                |
-| --------------------- | -------------------------------------- |
-| **Next.js 15**        | Frontend framework with App Router     |
-| **TypeScript**        | Type safety throughout the application |
-| **tRPC**              | Type-safe API layer                    |
-| **Prisma**            | ORM for PostgreSQL database operations |
-| **Neon PostgreSQL**   | Serverless PostgreSQL 16 database      |
-| **Tailwind CSS**      | Utility-first CSS framework            |
-| **React Hook Form**   | Form validation and management         |
-| **@headlessui/react** | Accessible modal/dialog components     |
-| **react-hot-toast**   | Toast notifications                    |
-| **Zustand**           | Client-side state management           |
-| **Zod**               | Schema validation                      |
+- **Unlimited Landing Pages** - Create, edit, and organize content
+- **Rich Sections** - Up to 25 sections per page with text, buttons (3 max), images (8 max)
+- **Archive & Restore** - Move old pages to archive without deletion
+- **Smart Duplicate** - Copy pages with auto-generated unique URLs (`-2`, `-3`)
+- **Export** - Download formatted TXT files
+- **Unique URL Protection** - Per-user URL constraints prevent conflicts
 
-## 🛠️ Setup Instructions
+### Authentication
 
-### Prerequisites
+- **GitHub OAuth** - Primary authentication
+- **Google OAuth** - Secondary authentication
+- **Guest Mode** - Shared anonymous account (no OAuth needed)
 
-- Node.js 18+ and npm
-- Neon PostgreSQL account
+### Privacy & Compliance
+
+- **SEO Blocking** - Completely invisible to search engines (robots.txt + meta tags)
+- **GDPR Privacy Policy** - Article 6, 15-21 compliant
+- **Terms of Service** - German law jurisdiction
+- **Legal Notice/Impressum** - §5 TMG compliance (requires contact info)
+
+---
+
+## 🚀 Quick Start
 
 ### Installation
 
-1. **Clone the repository**
+```bash
+# 1. Install dependencies
+npm install
 
-   ```bash
-   git clone https://github.com/gae4it/contentpagemaker.git
-   cd contentpagemaker
-   ```
+# 2. Configure environment variables
+cp .env.example .env
+# Edit .env with your database and OAuth credentials
 
-2. **Install dependencies**
+# 3. Setup database
+npx prisma migrate dev
 
-   ```bash
-   npm install
-   ```
-
-3. **Environment setup**
-   - Copy `.env.example` to `.env`
-   - Get your Neon PostgreSQL connection string from [console.neon.tech](https://console.neon.tech)
-   - Update `DATABASE_URL` in `.env`:
-
-   ```env
-   DATABASE_URL="postgresql://[user]:[password]@[neon-host]/[database]?sslmode=require"
-   ```
-
-4. **Database setup**
-
-   ```bash
-   # Generate Prisma client
-   npx prisma generate
-
-   # Run database migrations
-   npx prisma migrate dev --name init
-
-   # (Optional) Open Prisma Studio to inspect data
-   npx prisma studio
-   ```
-
-5. **Start development server**
-
-   ```bash
-   npm run dev
-   ```
-
-   The application will be available at `http://localhost:3000`
-
-## 📋 Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint issues
-- `npm run format:write` - Format code with Prettier
-- `npx prisma studio` - Open database GUI
-- `npx prisma migrate dev` - Run database migrations
-
-## 🎯 Usage
-
-### Creating Landing Pages
-
-1. Navigate to the home page
-2. Click "Add New Landing Page"
-3. Fill in URL and description
-4. Add sections with content, buttons, and images
-5. Use up/down arrows to reorder sections
-6. Save the landing page
-
-### Managing Content
-
-- **Sections**: Each section can have intro, title, subtitle, description
-- **Buttons**: Up to 3 buttons per section (URL or scroll type)
-- **Images**: Up to 8 external image URLs per section
-- **Reordering**: Use up/down buttons to rearrange sections
-
-### Exporting Data
-
-- Go to the edit page of any landing page
-- Click "Export to TXT" to download formatted content
-- The export includes all sections, buttons, and images
-
-## 🚀 Deployment
-
-### Recommended Setup
-
-- **Frontend**: Vercel (free tier, optimized for Next.js)
-- **Database**: Neon PostgreSQL (free tier: 10GB storage)
-- **Total Cost**: $0/month for small to medium projects
-
-## 🔒 Environment Variables
-
-```env
-# Database (required)
-DATABASE_URL="postgresql://[user]:[password]@[neon-host]/[database]?sslmode=require"
-
-# Next.js (optional)
-NEXTAUTH_SECRET="your-secret-key"
-NEXTAUTH_URL="http://localhost:3000"
+# 4. Run development server
+npm run dev
 ```
 
-## 🤝 Contributing
+Visit [http://localhost:3000](http://localhost:3000)
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests and linting
-5. Submit a pull request
+---
 
-## 📝 License
+## 🔐 Environment Setup
 
-This project is licensed under the MIT License.
+Create `.env` file:
+
+```bash
+# NextAuth (REQUIRED - no trailing slash!)
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=<generate-with-openssl-rand-base64-32>
+
+# Database (REQUIRED)
+DATABASE_URL=postgresql://user:password@host:5432/database?sslmode=require
+
+# OAuth (OPTIONAL - guest mode works without these)
+GITHUB_CLIENT_ID=your_github_client_id
+GITHUB_CLIENT_SECRET=your_github_client_secret
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+```
+
+### Generate Secret
+
+```bash
+openssl rand -base64 32
+# OR
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+### OAuth Setup (Optional)
+
+**GitHub:** [https://github.com/settings/developers](https://github.com/settings/developers)
+
+- Callback URL: `http://localhost:3000/api/auth/callback/github`
+
+**Google:** [https://console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials)
+
+- Redirect URI: `http://localhost:3000/api/auth/callback/google`
+
+---
+
+## 🛠 Tech Stack
+
+- **Framework:** Next.js 16.1.2 (Turbopack)
+- **Language:** TypeScript 5.9.3
+- **UI:** React 19.2.3, Tailwind CSS 4.1.18
+- **API:** tRPC 11.8.1 (end-to-end type safety)
+- **Database:** Neon PostgreSQL (Prisma 6.19.2)
+- **Auth:** NextAuth.js v5.0.0-beta.30
+- **State:** Zustand 5.0.10
+- **Validation:** Zod 4.3.5
+
+---
+
+## 📦 Available Scripts
+
+```bash
+npm run dev       # Development server with Turbopack
+npm run build     # Production build
+npm run start     # Production server
+npm run lint      # ESLint check
+npm run fix       # Auto-fix linting + formatting
+npm run check     # Lint + format + typecheck
+
+npx prisma studio # Database GUI
+npx prisma migrate dev # Create migration
+```
+
+---
+
+## 📊 Database Schema
+
+- **User** - Auth profiles (GitHub, Google, Guest)
+- **LandingPage** - URLs, descriptions, archived flag, unique per user
+- **Section** - Content blocks (max 25 per page)
+- **Button** - CTAs with link/scroll behavior (max 3 per section)
+- **Image** - External URLs with alt text (max 8 per section)
+
+**Migrations:**
+
+1. `init` - Base schema
+2. `add_authentication` - NextAuth models
+3. `create_guest_user` - Shared guest account
+4. `add_archived_and_unique_url` - v3.0 features
+
+---
+
+## 🌍 Deployment (Vercel)
+
+1. Push code to GitHub
+2. Import to Vercel
+3. Set environment variables (production URLs, no trailing slash in `NEXTAUTH_URL`)
+4. Update OAuth callbacks:
+   - GitHub: `https://your-domain.vercel.app/api/auth/callback/github`
+   - Google: `https://your-domain.vercel.app/api/auth/callback/google`
+5. Deploy
+
+---
+
+## ⚠️ Important Notes
+
+### Before Deployment
+
+- **⚠️ Update `/legal` page** with your actual contact information (German law §5 TMG)
+- Ensure `NEXTAUTH_URL` has **NO trailing slash**
+- Configure OAuth callbacks for production domain
+
+### SEO Blocking
+
+App is completely invisible to search engines. Remove `robots.txt` and meta tags in [layout.tsx](src/app/layout.tsx) if you want it indexed.
+
+---
+
+## 📄 Documentation
+
+See [PRD.md](PRD.md) for comprehensive documentation including:
+
+- Full API reference (tRPC endpoints)
+- Detailed feature descriptions
+- Security & GDPR compliance details
+- Complete database schema
+- Deployment guide
+
+---
+
+## 🎨 UI Features
+
+**Button Colors (v3.0):**
+
+- Green - Edit
+- Yellow - Duplicate
+- Gray - Archive/Restore
+- Red - Delete
+
+**Responsive Design:** Optimized for desktop and mobile
+
+---
+
+## 📞 Support
+
+- Review [PRD.md](PRD.md) for detailed documentation
+- Check `/privacy`, `/terms`, `/legal` pages for compliance info
+- Ensure OAuth callbacks match `NEXTAUTH_URL` exactly
+
+---
+
+**Status:** ✅ Production Ready  
+**Version:** 3.0.0  
+**Last Updated:** January 16, 2026
+
+**License:** MIT

@@ -28,6 +28,19 @@ declare module "next-auth" {
 }
 
 const GUEST_USER_ID = "guest-user-shared-account";
+const GUEST_EMAIL = "guest@contentpagemaker.local";
+
+async function ensureGuestUser() {
+  return db.user.upsert({
+    where: { id: GUEST_USER_ID },
+    update: {},
+    create: {
+      id: GUEST_USER_ID,
+      email: GUEST_EMAIL,
+      name: "Guest User",
+    },
+  });
+}
 
 /**
  * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
@@ -41,12 +54,11 @@ export const authConfig = {
       name: "Guest",
       credentials: {},
       async authorize() {
-        // Guest user is created via database migration
-        // Return the guest user object
+        const user = await ensureGuestUser();
         return {
-          id: GUEST_USER_ID,
-          email: "guest@contentpagemaker.local",
-          name: "Guest User",
+          id: user.id,
+          email: user.email ?? GUEST_EMAIL,
+          name: user.name ?? "Guest User",
           isGuest: true,
         };
       },

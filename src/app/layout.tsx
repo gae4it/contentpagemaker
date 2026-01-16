@@ -7,11 +7,25 @@ import { Toaster } from "react-hot-toast";
 import { TRPCReactProvider } from "@/trpc/react";
 import { AuthProvider } from "@/components/AuthProvider";
 import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "ContentPageMaker",
   description: "Create and manage landing page content with ease",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+    googleBot: {
+      index: false,
+      follow: false,
+      noimageindex: true,
+      "max-video-preview": -1,
+      "max-image-preview": "none",
+      "max-snippet": -1,
+    },
+  },
 };
 
 const geist = Geist({
@@ -24,11 +38,12 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${geist.variable}`}>
-      <body>
+      <body className="flex min-h-screen flex-col">
         <AuthProvider>
           <TRPCReactProvider>
             <Header />
-            {children}
+            <main className="flex-1">{children}</main>
+            <Footer />
             <Toaster position="top-right" />
           </TRPCReactProvider>
         </AuthProvider>
